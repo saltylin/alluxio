@@ -66,7 +66,7 @@ public class ConcurrentFileSystemMasterSetTtlTest {
   @Rule
   public LocalAlluxioClusterResource mLocalAlluxioClusterResource =
       new LocalAlluxioClusterResource.Builder().setProperty(PropertyKey.UNDERFS_ADDRESS,
-          "sleep://" + mLocalUfsPath).setProperty(PropertyKey
+          "file://" + mLocalUfsPath).setProperty(PropertyKey
           .USER_FILE_MASTER_CLIENT_THREADS, CONCURRENCY_FACTOR)
           .setProperty(PropertyKey.MASTER_TTL_CHECKER_INTERVAL_MS, 200L).build();
 

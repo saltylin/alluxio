@@ -15,11 +15,11 @@ import alluxio.Configuration;
 import alluxio.PropertyKey;
 
 import alluxio.collections.ConcurrentHashSet;
+
 import com.google.common.base.Objects;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.Set;
-
 
 /**
  * A bucket with all files whose ttl value lies in the bucket's time interval. The bucket's time
