@@ -36,7 +36,8 @@ public enum PropertyKey {
   SITE_CONF_DIR(Name.SITE_CONF_DIR, "${user.home}/.alluxio/,/etc/alluxio/"),
   TEST_MODE(Name.TEST_MODE, false),
   VERSION(Name.VERSION, ProjectConstants.VERSION),
-  WEB_RESOURCES(Name.WEB_RESOURCES, String.format("${%s}/core/server/src/main/webapp", Name.HOME)),
+  WEB_RESOURCES(Name.WEB_RESOURCES,
+      String.format("${%s}/core/server/common/src/main/webapp", Name.HOME)),
   WEB_THREADS(Name.WEB_THREADS, 1),
   WORK_DIR(Name.WORK_DIR, String.format("${%s}", Name.HOME)),
   ZOOKEEPER_ADDRESS(Name.ZOOKEEPER_ADDRESS, null),
@@ -85,6 +86,7 @@ public enum PropertyKey {
   UNDERFS_S3A_SECURE_HTTP_ENABLED(Name.UNDERFS_S3A_SECURE_HTTP_ENABLED, false),
   UNDERFS_S3A_SERVER_SIDE_ENCRYPTION_ENABLED(Name.UNDERFS_S3A_SERVER_SIDE_ENCRYPTION_ENABLED,
       false),
+  UNDERFS_S3A_SIGNER_ALGORITHM(Name.UNDERFS_S3A_SIGNER_ALGORITHM, null),
   UNDERFS_S3A_SOCKET_TIMEOUT_MS(Name.UNDERFS_S3A_SOCKET_TIMEOUT_MS, 50000),
 
   //
@@ -113,21 +115,31 @@ public enum PropertyKey {
   //
   // Master related properties
   //
+  // deprecated since version 1.3 and will be removed in version 2.0
+  // use MASTER_HOSTNAME instead
   MASTER_ADDRESS(Name.MASTER_ADDRESS, null),
   MASTER_BIND_HOST(Name.MASTER_BIND_HOST, "0.0.0.0"),
+  MASTER_CONNECTION_TIMEOUT_MS(Name.MASTER_CONNECTION_TIMEOUT_MS, 0),
   MASTER_FILE_ASYNC_PERSIST_HANDLER(Name.MASTER_FILE_ASYNC_PERSIST_HANDLER,
       "alluxio.master.file.async.DefaultAsyncPersistHandler"),
   MASTER_FORMAT_FILE_PREFIX(Name.MASTER_FORMAT_FILE_PREFIX, "_format_"),
   MASTER_HEARTBEAT_INTERVAL_MS(Name.MASTER_HEARTBEAT_INTERVAL_MS, 1000),
   MASTER_HOSTNAME(Name.MASTER_HOSTNAME, null),
   MASTER_JOURNAL_FLUSH_BATCH_TIME_MS(Name.MASTER_JOURNAL_FLUSH_BATCH_TIME_MS, 5),
+  MASTER_JOURNAL_FLUSH_TIMEOUT_MS(Name.MASTER_JOURNAL_FLUSH_TIMEOUT_MS, 300000),
   MASTER_JOURNAL_FOLDER(Name.MASTER_JOURNAL_FOLDER, String.format("${%s}/journal", Name.WORK_DIR)),
+  // Deprecated since 1.5.0 and will be removed in 2.0.
   MASTER_JOURNAL_FORMATTER_CLASS(Name.MASTER_JOURNAL_FORMATTER_CLASS,
-      "alluxio.master.journal.ProtoBufJournalFormatter"),
+      "alluxio.master.journalv0.ProtoBufJournalFormatter"),
   MASTER_JOURNAL_LOG_SIZE_BYTES_MAX(Name.MASTER_JOURNAL_LOG_SIZE_BYTES_MAX, "10MB"),
   MASTER_JOURNAL_TAILER_SHUTDOWN_QUIET_WAIT_TIME_MS(
       Name.MASTER_JOURNAL_TAILER_SHUTDOWN_QUIET_WAIT_TIME_MS, 5000),
   MASTER_JOURNAL_TAILER_SLEEP_TIME_MS(Name.MASTER_JOURNAL_TAILER_SLEEP_TIME_MS, 1000),
+  MASTER_JOURNAL_CHECKPOINT_PERIOD_ENTRIES(Name.MASTER_JOURNAL_CHECKPOINT_PERIOD_ENTRIES, 2000000),
+  MASTER_JOURNAL_GC_PERIOD_MS(Name.MASTER_JOURNAL_GC_PERIOD_MS, 120000),
+  MASTER_JOURNAL_GC_THRESHOLD_MS(Name.MASTER_JOURNAL_GC_THRESHOLD_MS, 300000),
+  MASTER_JOURNAL_TEMPORARY_FILE_GC_THRESHOLD_MS(Name.MASTER_JOURNAL_TEMPORARY_FILE_GC_THRESHOLD_MS,
+      1800000),
   MASTER_KEYTAB_KEY_FILE(Name.MASTER_KEYTAB_KEY_FILE, null),
   MASTER_LINEAGE_CHECKPOINT_CLASS(Name.MASTER_LINEAGE_CHECKPOINT_CLASS,
       "alluxio.master.lineage.checkpoint.CheckpointLatestPlanner"),
@@ -136,7 +148,9 @@ public enum PropertyKey {
   MASTER_LINEAGE_RECOMPUTE_LOG_PATH(Name.MASTER_LINEAGE_RECOMPUTE_LOG_PATH,
       String.format("${%s}/recompute.log", Name.LOGS_DIR)),
   MASTER_PRINCIPAL(Name.MASTER_PRINCIPAL, null),
-  MASTER_RETRY(Name.MASTER_RETRY, 29),
+  // deprecated since version 1.4 and will be removed in version 2.0
+  // use USER_RPC_RETRY_MAX_NUM_RETRY instead
+  MASTER_RETRY(Name.MASTER_RETRY, String.format("${%s}", Name.USER_RPC_RETRY_MAX_NUM_RETRY)),
   MASTER_RPC_PORT(Name.MASTER_RPC_PORT, 19998),
   MASTER_STARTUP_CONSISTENCY_CHECK_ENABLED(Name.MASTER_STARTUP_CONSISTENCY_CHECK_ENABLED, true),
   MASTER_TIERED_STORE_GLOBAL_LEVEL0_ALIAS(Name.MASTER_TIERED_STORE_GLOBAL_LEVEL0_ALIAS, "MEM"),
@@ -256,11 +270,12 @@ public enum PropertyKey {
   USER_BLOCK_WORKER_CLIENT_POOL_SIZE_MAX(Name.USER_BLOCK_WORKER_CLIENT_POOL_SIZE_MAX, 128),
   USER_BLOCK_WORKER_CLIENT_POOL_GC_THRESHOLD_MS(
       Name.USER_BLOCK_WORKER_CLIENT_POOL_GC_THRESHOLD_MS, 300 * Constants.SECOND_MS),
-
+  USER_DATE_FORMAT_PATTERN(Name.USER_DATE_FORMAT_PATTERN, "MM-dd-yyyy HH:mm:ss:SSS"),
   USER_FAILED_SPACE_REQUEST_LIMITS(Name.USER_FAILED_SPACE_REQUEST_LIMITS, 3),
   USER_FILE_BUFFER_BYTES(Name.USER_FILE_BUFFER_BYTES, "1MB"),
   USER_FILE_CACHE_PARTIALLY_READ_BLOCK(Name.USER_FILE_CACHE_PARTIALLY_READ_BLOCK, true),
   USER_FILE_MASTER_CLIENT_THREADS(Name.USER_FILE_MASTER_CLIENT_THREADS, 10),
+  USER_FILE_PASSIVE_CACHE_ENABLED(Name.USER_FILE_PASSIVE_CACHE_ENABLED, true),
   USER_FILE_READ_TYPE_DEFAULT(Name.USER_FILE_READ_TYPE_DEFAULT, "CACHE_PROMOTE"),
   USER_FILE_SEEK_BUFFER_SIZE_BYTES(Name.USER_FILE_SEEK_BUFFER_SIZE_BYTES, "1MB"),
   USER_FILE_WAITCOMPLETED_POLL_MS(Name.USER_FILE_WAITCOMPLETED_POLL_MS, 1000),
@@ -270,11 +285,16 @@ public enum PropertyKey {
       Name.USER_FILE_WORKER_CLIENT_POOL_GC_THRESHOLD_MS, 300 * Constants.SECOND_MS),
   USER_FILE_WRITE_LOCATION_POLICY(Name.USER_FILE_WRITE_LOCATION_POLICY,
       "alluxio.client.file.policy.LocalFirstPolicy"),
+  USER_FILE_WRITE_AVOID_EVICTION_POLICY_RESERVED_BYTES(
+      Name.USER_FILE_WRITE_AVOID_EVICTION_POLICY_RESERVED_BYTES, "0MB"),
   USER_FILE_WRITE_TYPE_DEFAULT(Name.USER_FILE_WRITE_TYPE_DEFAULT, "MUST_CACHE"),
   USER_FILE_WRITE_TIER_DEFAULT(Name.USER_FILE_WRITE_TIER_DEFAULT, Constants.FIRST_TIER),
   USER_HEARTBEAT_INTERVAL_MS(Name.USER_HEARTBEAT_INTERVAL_MS, 1000),
+  USER_HOSTNAME(Name.USER_HOSTNAME, null),
   USER_LINEAGE_ENABLED(Name.USER_LINEAGE_ENABLED, false),
   USER_LINEAGE_MASTER_CLIENT_THREADS(Name.USER_LINEAGE_MASTER_CLIENT_THREADS, 10),
+  USER_LOCAL_READER_PACKET_SIZE_BYTES(Name.USER_LOCAL_READER_PACKET_SIZE_BYTES, "8MB"),
+  USER_LOCAL_WRITER_PACKET_SIZE_BYTES(Name.USER_LOCAL_WRITER_PACKET_SIZE_BYTES, "64KB"),
   USER_NETWORK_NETTY_CHANNEL(Name.USER_NETWORK_NETTY_CHANNEL, null),
   USER_NETWORK_NETTY_TIMEOUT_MS(Name.USER_NETWORK_NETTY_TIMEOUT_MS, 30000),
   USER_NETWORK_NETTY_WORKER_THREADS(Name.USER_NETWORK_NETTY_WORKER_THREADS, 0),
@@ -289,6 +309,9 @@ public enum PropertyKey {
   USER_NETWORK_NETTY_READER_BUFFER_SIZE_PACKETS(Name.USER_NETWORK_NETTY_READER_BUFFER_SIZE_PACKETS,
       16),
   USER_NETWORK_NETTY_READER_CANCEL_ENABLED(Name.USER_NETWORK_NETTY_READER_CANCEL_ENABLED, true),
+  USER_RPC_RETRY_BASE_SLEEP_MS(Name.USER_RPC_RETRY_BASE_SLEEP_MS, 50),
+  USER_RPC_RETRY_MAX_NUM_RETRY(Name.USER_RPC_RETRY_MAX_NUM_RETRY, 20),
+  USER_RPC_RETRY_MAX_SLEEP_MS(Name.USER_RPC_RETRY_MAX_SLEEP_MS, 5000),
   USER_UFS_DELEGATION_ENABLED(Name.USER_UFS_DELEGATION_ENABLED, true),
   USER_UFS_DELEGATION_READ_BUFFER_SIZE_BYTES(Name.USER_UFS_DELEGATION_READ_BUFFER_SIZE_BYTES,
       "8MB"),
@@ -300,9 +323,14 @@ public enum PropertyKey {
   // Deprecated. It will be removed in 2.0.0.
   USER_UFS_FILE_WRITER_CLASS(Name.USER_UFS_FILE_WRITER_CLASS,
       "alluxio.client.netty.NettyUnderFileSystemFileWriter"),
-  USER_LOCAL_READER_PACKET_SIZE_BYTES(Name.USER_LOCAL_READER_PACKET_SIZE_BYTES, "8MB"),
-  USER_LOCAL_WRITER_PACKET_SIZE_BYTES(Name.USER_LOCAL_WRITER_PACKET_SIZE_BYTES, "64KB"),
-  USER_PACKET_STREAMING_ENABLED(Name.USER_PACKET_STREAMING_ENABLED, false),
+  USER_UFS_BLOCK_READ_LOCATION_POLICY(Name.USER_UFS_BLOCK_READ_LOCATION_POLICY,
+      "alluxio.client.file.policy.LocalFirstPolicy"),
+  USER_UFS_BLOCK_READ_LOCATION_POLICY_DETERMINISTIC_HASH_SHARDS(
+      Name.USER_UFS_BLOCK_READ_LOCATION_POLICY_DETERMINISTIC_HASH_SHARDS, 1),
+  USER_UFS_BLOCK_READ_CONCURRENCY_MAX(Name.USER_UFS_BLOCK_READ_CONCURRENCY_MAX,
+      Integer.MAX_VALUE),
+  USER_UFS_BLOCK_OPEN_TIMEOUT_MS(Name.USER_UFS_BLOCK_OPEN_TIMEOUT_MS, 300000),
+  USER_SHORT_CIRCUIT_ENABLED(Name.USER_SHORT_CIRCUIT_ENABLED, true),
 
   //
   // FUSE integration related properties
@@ -454,6 +482,8 @@ public enum PropertyKey {
         "alluxio.underfs.s3a.secure.http.enabled";
     public static final String UNDERFS_S3A_SERVER_SIDE_ENCRYPTION_ENABLED =
         "alluxio.underfs.s3a.server.side.encryption.enabled";
+    public static final String UNDERFS_S3A_SIGNER_ALGORITHM =
+        "alluxio.underfs.s3a.signer.algorithm";
     public static final String UNDERFS_S3A_SOCKET_TIMEOUT_MS =
         "alluxio.underfs.s3a.socket.timeout.ms";
     public static final String UNDERFS_S3_ADMIN_THREADS_MAX =
@@ -501,6 +531,8 @@ public enum PropertyKey {
     //
     public static final String MASTER_ADDRESS = "alluxio.master.address";
     public static final String MASTER_BIND_HOST = "alluxio.master.bind.host";
+    public static final String MASTER_CONNECTION_TIMEOUT_MS =
+            "alluxio.master.connection.timeout.ms";
     public static final String MASTER_FILE_ASYNC_PERSIST_HANDLER =
         "alluxio.master.file.async.persist.handler";
     public static final String MASTER_FORMAT_FILE_PREFIX = "alluxio.master.format.file_prefix";
@@ -509,6 +541,8 @@ public enum PropertyKey {
     public static final String MASTER_HOSTNAME = "alluxio.master.hostname";
     public static final String MASTER_JOURNAL_FLUSH_BATCH_TIME_MS =
         "alluxio.master.journal.flush.batch.time.ms";
+    public static final String MASTER_JOURNAL_FLUSH_TIMEOUT_MS =
+        "alluxio.master.journal.flush.timeout.ms";
     public static final String MASTER_JOURNAL_FOLDER = "alluxio.master.journal.folder";
     public static final String MASTER_JOURNAL_FORMATTER_CLASS =
         "alluxio.master.journal.formatter.class";
@@ -549,6 +583,13 @@ public enum PropertyKey {
     public static final String MASTER_WORKER_THREADS_MAX = "alluxio.master.worker.threads.max";
     public static final String MASTER_WORKER_THREADS_MIN = "alluxio.master.worker.threads.min";
     public static final String MASTER_WORKER_TIMEOUT_MS = "alluxio.master.worker.timeout.ms";
+    public static final String MASTER_JOURNAL_CHECKPOINT_PERIOD_ENTRIES =
+        "alluxio.master.journal.checkpoint.period.entries";
+    public static final String MASTER_JOURNAL_GC_PERIOD_MS = "alluxio.master.journal.gc.period.ms";
+    public static final String MASTER_JOURNAL_GC_THRESHOLD_MS =
+        "alluxio.master.journal.gc.threshold.ms";
+    public static final String MASTER_JOURNAL_TEMPORARY_FILE_GC_THRESHOLD_MS =
+        "alluxio.master.journal.temporary.file.gc.threshold.ms";
 
     //
     // Worker related properties
@@ -690,6 +731,8 @@ public enum PropertyKey {
         "alluxio.user.block.worker.client.pool.size.max";
     public static final String USER_BLOCK_WORKER_CLIENT_POOL_GC_THRESHOLD_MS =
         "alluxio.user.block.worker.client.pool.gc.threshold.ms";
+    public static final String USER_DATE_FORMAT_PATTERN =
+        "alluxio.user.date.format.pattern";
     public static final String USER_FAILED_SPACE_REQUEST_LIMITS =
         "alluxio.user.failed.space.request.limits";
     public static final String USER_FILE_BUFFER_BYTES = "alluxio.user.file.buffer.bytes";
@@ -697,6 +740,8 @@ public enum PropertyKey {
         "alluxio.user.file.cache.partially.read.block";
     public static final String USER_FILE_MASTER_CLIENT_THREADS =
         "alluxio.user.file.master.client.threads";
+    public static final String USER_FILE_PASSIVE_CACHE_ENABLED =
+        "alluxio.user.file.passive.cache.enabled";
     public static final String USER_FILE_READ_TYPE_DEFAULT = "alluxio.user.file.readtype.default";
     public static final String USER_FILE_SEEK_BUFFER_SIZE_BYTES =
         "alluxio.user.file.seek.buffer.size.bytes";
@@ -710,13 +755,20 @@ public enum PropertyKey {
         "alluxio.user.file.worker.client.pool.gc.threshold.ms";
     public static final String USER_FILE_WRITE_LOCATION_POLICY =
         "alluxio.user.file.write.location.policy.class";
+    public static final String USER_FILE_WRITE_AVOID_EVICTION_POLICY_RESERVED_BYTES =
+        "alluxio.user.file.write.avoid.eviction.policy.reserved.size.bytes";
     public static final String USER_FILE_WRITE_TYPE_DEFAULT = "alluxio.user.file.writetype.default";
     public static final String USER_FILE_WRITE_TIER_DEFAULT =
         "alluxio.user.file.write.tier.default";
     public static final String USER_HEARTBEAT_INTERVAL_MS = "alluxio.user.heartbeat.interval.ms";
+    public static final String USER_HOSTNAME = "alluxio.user.hostname";
     public static final String USER_LINEAGE_ENABLED = "alluxio.user.lineage.enabled";
     public static final String USER_LINEAGE_MASTER_CLIENT_THREADS =
         "alluxio.user.lineage.master.client.threads";
+    public static final String USER_LOCAL_READER_PACKET_SIZE_BYTES =
+        "alluxio.user.local.reader.packet.size.bytes";
+    public static final String USER_LOCAL_WRITER_PACKET_SIZE_BYTES =
+        "alluxio.user.local.writer.packet.size.bytes";
     public static final String USER_NETWORK_NETTY_CHANNEL = "alluxio.user.network.netty.channel";
     public static final String USER_NETWORK_NETTY_TIMEOUT_MS =
         "alluxio.user.network.netty.timeout.ms";
@@ -736,6 +788,12 @@ public enum PropertyKey {
         "alluxio.user.network.netty.reader.buffer.size.packets";
     public static final String USER_NETWORK_NETTY_READER_CANCEL_ENABLED =
         "alluxio.user.network.netty.reader.cancel.enabled";
+    public static final String USER_RPC_RETRY_BASE_SLEEP_MS =
+        "alluxio.user.rpc.retry.base.sleep.ms";
+    public static final String USER_RPC_RETRY_MAX_NUM_RETRY =
+        "alluxio.user.rpc.retry.max.num.retry";
+    public static final String USER_RPC_RETRY_MAX_SLEEP_MS =
+        "alluxio.user.rpc.retry.max.sleep.ms";
     public static final String USER_UFS_DELEGATION_ENABLED = "alluxio.user.ufs.delegation.enabled";
     public static final String USER_UFS_DELEGATION_READ_BUFFER_SIZE_BYTES =
         "alluxio.user.ufs.delegation.read.buffer.size.bytes";
@@ -745,12 +803,15 @@ public enum PropertyKey {
         "alluxio.user.ufs.file.reader.class";
     public static final String USER_UFS_FILE_WRITER_CLASS =
         "alluxio.user.ufs.file.writer.class";
-    public static final String USER_LOCAL_READER_PACKET_SIZE_BYTES =
-        "alluxio.user.local.reader.packet.size.bytes";
-    public static final String USER_LOCAL_WRITER_PACKET_SIZE_BYTES =
-        "alluxio.user.local.writer.packet.size.bytes";
-    public static final String USER_PACKET_STREAMING_ENABLED =
-        "alluxio.user.packet.streaming.enabled";
+    public static final String USER_UFS_BLOCK_READ_LOCATION_POLICY =
+        "alluxio.user.ufs.block.read.location.policy";
+    public static final String USER_UFS_BLOCK_READ_LOCATION_POLICY_DETERMINISTIC_HASH_SHARDS =
+        "alluxio.user.ufs.block.read.location.policy.deterministic.hash.shards";
+    public static final String USER_UFS_BLOCK_READ_CONCURRENCY_MAX =
+        "alluxio.user.ufs.block.read.concurrency.max";
+    public static final String USER_UFS_BLOCK_OPEN_TIMEOUT_MS =
+        "alluxio.user.ufs.block.open.timeout.ms";
+    public static final String USER_SHORT_CIRCUIT_ENABLED = "alluxio.user.short.circuit.disabled";
 
     //
     // FUSE integration related properties

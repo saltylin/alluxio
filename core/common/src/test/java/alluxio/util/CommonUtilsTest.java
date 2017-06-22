@@ -311,21 +311,20 @@ public class CommonUtilsTest {
     }
   }
 
-  /**
-   * Tests the {@link CommonUtils#isUfsObjectStorage(String)} method.
-   */
   @Test
-  public void isUfsObjectStorage() throws Exception {
-    Assert.assertEquals(true, CommonUtils.isUfsObjectStorage("s3://bucket/"));
-    Assert.assertEquals(true, CommonUtils.isUfsObjectStorage("s3n://bucket"));
-    Assert.assertEquals(true, CommonUtils.isUfsObjectStorage("s3a://bucket/"));
-    Assert.assertEquals(true, CommonUtils.isUfsObjectStorage("gs://bucket/"));
-    Assert.assertEquals(true, CommonUtils.isUfsObjectStorage("swift://bucket/"));
-    Assert.assertEquals(true, CommonUtils.isUfsObjectStorage("oss://bucket/"));
-    Assert.assertEquals(false, CommonUtils.isUfsObjectStorage("hdfs://dir/"));
-    Assert.assertEquals(false, CommonUtils.isUfsObjectStorage("/dir/"));
-    Assert.assertEquals(false, CommonUtils.isUfsObjectStorage("/"));
-    Assert.assertEquals(false, CommonUtils.isUfsObjectStorage(""));
+  public void stripLeadingAndTrailingQuotes() throws Exception {
+    Assert.assertEquals("", CommonUtils.stripLeadingAndTrailingQuotes(""));
+    Assert.assertEquals("\"", CommonUtils.stripLeadingAndTrailingQuotes("\""));
+    Assert.assertEquals("", CommonUtils.stripLeadingAndTrailingQuotes("\"\""));
+    Assert.assertEquals("\"", CommonUtils.stripLeadingAndTrailingQuotes("\"\"\""));
+    Assert.assertEquals("\"\"", CommonUtils.stripLeadingAndTrailingQuotes("\"\"\"\""));
+    Assert.assertEquals("noquote", CommonUtils.stripLeadingAndTrailingQuotes("noquote"));
+    Assert.assertEquals(
+        "\"singlequote", CommonUtils.stripLeadingAndTrailingQuotes("\"singlequote"));
+    Assert.assertEquals(
+        "singlequote\"", CommonUtils.stripLeadingAndTrailingQuotes("singlequote\""));
+    Assert.assertEquals("quoted", CommonUtils.stripLeadingAndTrailingQuotes("\"quoted\""));
+    Assert.assertEquals("\"quoted\"", CommonUtils.stripLeadingAndTrailingQuotes("\"\"quoted\"\""));
   }
 
   @Test

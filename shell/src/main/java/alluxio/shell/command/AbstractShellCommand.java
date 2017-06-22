@@ -69,6 +69,24 @@ public abstract class AbstractShellCommand implements ShellCommand {
           .hasArg(false)
           .desc("list directories as plain files")
           .build();
+  protected static final Option LIST_PINNED_FILES_OPTION =
+          Option.builder("p")
+                  .required(false)
+                  .hasArg(false)
+                  .desc("list all pinned files")
+                  .build();
+  protected static final Option FIX_INCONSISTENT_FILES =
+      Option.builder("r")
+          .required(false)
+          .hasArg(false)
+          .desc("repair inconsistent files")
+          .build();
+  protected static final Option LIST_HUMAN_READABLE_OPTION =
+      Option.builder("h")
+          .required(false)
+          .hasArg(false)
+          .desc("print human-readable format sizes")
+          .build();
 
   protected AbstractShellCommand(FileSystem fs) {
     mFileSystem = fs;
@@ -96,12 +114,8 @@ public abstract class AbstractShellCommand implements ShellCommand {
    */
   protected abstract int getNumOfArgs();
 
-  /**
-   * Gets the supported Options of the command.
-   *
-   * @return the Options
-   */
-  protected Options getOptions() {
+  @Override
+  public Options getOptions() {
     return new Options();
   }
 
@@ -112,10 +126,9 @@ public abstract class AbstractShellCommand implements ShellCommand {
     CommandLine cmd;
 
     try {
-      cmd = parser.parse(opts, args, true /* stopAtNonOption */);
+      cmd = parser.parse(opts, args);
     } catch (ParseException e) {
-      // TODO(ifcharming): improve the error message when an unregistered option appears
-      System.err.println("Unable to parse input args: " + e.getMessage());
+      System.err.println(String.format("%s: %s", getCommandName(), e.getMessage()));
       return null;
     }
 

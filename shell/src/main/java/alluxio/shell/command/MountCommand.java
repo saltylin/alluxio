@@ -52,13 +52,13 @@ public final class MountCommand extends AbstractShellCommand {
   }
 
   @Override
-  protected Options getOptions() {
+  public Options getOptions() {
     return new Options().addOption(PROPERTY_FILE_OPTION).addOption(READONLY_OPTION)
         .addOption(MOUNT_SHARED_OPTION);
   }
 
   @Override
-  public void run(CommandLine cl) throws AlluxioException, IOException {
+  public int run(CommandLine cl) throws AlluxioException, IOException {
     String[] args = cl.getArgs();
     AlluxioURI alluxioPath = new AlluxioURI(args[0]);
     AlluxioURI ufsPath = new AlluxioURI(args[1]);
@@ -94,6 +94,7 @@ public final class MountCommand extends AbstractShellCommand {
 
     mFileSystem.mount(alluxioPath, ufsPath, options);
     System.out.println("Mounted " + ufsPath + " at " + alluxioPath);
+    return 0;
   }
 
   @Override

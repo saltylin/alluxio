@@ -19,16 +19,23 @@ import alluxio.cli.AlluxioShell;
 import alluxio.client.file.FileSystem;
 import alluxio.client.file.URIStatus;
 import alluxio.exception.AlluxioException;
+import alluxio.shell.command.ShellCommand;
+import alluxio.util.CommonUtils;
 import alluxio.util.io.PathUtils;
 import alluxio.util.network.NetworkAddressUtils;
 import alluxio.util.network.NetworkAddressUtils.ServiceType;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import org.reflections.Reflections;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Modifier;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -212,6 +219,33 @@ public final class AlluxioShellUtils {
       }
     }
     return res;
+  }
+
+  /**
+   * Gets all supported {@link ShellCommand} classes instances and load them into a map.
+   * Provides a way to gain these commands information by their CommandName.
+   *
+   * @param fileSystem the {@link FileSystem} instance to construct the command
+   * @return a mapping from command name to command instance
+   */
+  public static Map<String, ShellCommand> loadCommands(FileSystem fileSystem) {
+    Map<String, ShellCommand> commandsMap = new HashMap<>();
+    String pkgName = ShellCommand.class.getPackage().getName();
+    Reflections reflections = new Reflections(pkgName);
+    for (Class<? extends ShellCommand> cls : reflections.getSubTypesOf(ShellCommand.class)) {
+      // Only instantiate a concrete class
+      if (!Modifier.isAbstract(cls.getModifiers())) {
+        ShellCommand cmd;
+        try {
+          cmd = CommonUtils.createNewClassInstance(cls, new Class[] {FileSystem.class},
+              new Object[] {fileSystem});
+        } catch (Exception e) {
+          throw Throwables.propagate(e);
+        }
+        commandsMap.put(cmd.getCommandName(), cmd);
+      }
+    }
+    return commandsMap;
   }
 
   /**
